@@ -1,0 +1,29 @@
+{
+  "session": {
+    "sessionId": "SessionId.8eb9d4d3-3f30-4554-9f8d-9a9d8604feda",
+    "application": {
+      "applicationId": "amzn1.ask.skill.0c9405ec-2ef3-49db-9714-5bded14a19c9"
+    },
+    "attributes": {},
+    "user": {
+      "userId": "amzn1.ask.account.AFQRGMKKSZFHREC2U6ECSJAJFY45NBL7VQD5WLE2JKY7XXORYHVDLGWW56FERGMRLJET6PRC4NXVLV4IFLAEBLDQIOQBYYBD3FUBDYFWDNLNGSU3AVKUEMV26IYVLQEEYISVGUJLT7W6CRMM3BYZGRQYAHZRYJFS6VE3N66KA3JM2DMSRNWGTMUVY2CXPWTEP46WV46NW2UBMTQ"
+    },
+    "new": true
+  },
+  "request": {
+    "type": "IntentRequest",
+    "requestId": "EdwRequestId.47ed4136-3f9e-4ce9-9290-9001bbd7ed7d",
+    "locale": "de-DE",
+    "timestamp": "2017-07-08T13:53:32Z",
+    "intent": {
+      "name": "StationIntent",
+      "slots": {
+        "station": {
+          "name": "station",
+          "value": "zellescher weg"
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
