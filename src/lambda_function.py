@@ -3,7 +3,8 @@ AWS Lambda functions
 """
 
 from ask import alexa
-import dvb
+import requests
+import json
 
 
 def lambda_handler(request_obj, context=None):
@@ -14,7 +15,7 @@ def lambda_handler(request_obj, context=None):
     input 'request_obj' is JSON request converted into a nested python object.
     '''
 
-    metadata = {}  # add your own metadata to the request using key value pairs
+    metadata = dict()
     return alexa.route_request(request_obj, metadata)
 
 
@@ -26,7 +27,7 @@ def default_handler(request):
 
 @alexa.request_handler("LaunchRequest")
 def launch_request_handler(request):
-    return default_handler(request)
+    return alexa.create_response(message="Was kann ich für dich tun?")
 
 
 @alexa.request_handler("SessionEndedRequest")
@@ -48,17 +49,47 @@ def get_recipe_intent_handler(request):
         return alexa.create_response(message="Entschuldigung, aber du hast \
 mir keine Haltestelle genannt.")
 
-    stops = dvb.monitor(station, 0, 4)
+    stops = dvb_monitor(station)
 
-    speech_output = "Hier sind die nächten 4 Abfahrten für {station}.".format(
+    speech_output = "Hier sind die nächsten 4 Abfahrten für {station}.".format(
         station=station)
     card_output = ""
     for stop in stops:
-        speech_output += " Linie {line} nach {direction} in {arrival} Minuten.".format(
-            line=stop["line"], direction=stop["direction"], arrival=stop["arrival"])
-        card_output += "Linie {line} nach {direction}: {arrival} Minuten\n".format(
-            line=stop["line"], direction=stop["direction"], arrival=stop["arrival"])
-    
+        speech_output += " Linie {line} nach {direction} in {arrival}.".format(
+            line=stop["line"], direction=stop["direction"], arrival="einer Minute" if int(stop["arrival"]) == 1 else "{} Minuten".format(stop["arrival"]))
+        card_output += "Linie {line} nach {direction}: {arrival} Minute{n}\n".format(
+            line=stop["line"], direction=stop["direction"], arrival=stop["arrival"], n="n" if int(stop["arrival"]) != 1 else "")
+
     card = alexa.create_card(title="Die nächsten Abfahrten für {station}".format(station=station),
                              subtitle=None, content=card_output)
-    return alexa.create_response(message= speech_output, card_obj=card)
+    return alexa.create_response(message=speech_output, end_session=True, card_obj=card)
+
+
+def dvb_monitor(stop):
+
+    try:
+        r = requests.get(
+            url='http://widgets.vvo-online.de/abfahrtsmonitor/Abfahrten.do',
+            params={
+                'ort': 'Dresden',
+                'hst': stop,
+                'vz': 0,
+                'lim': 4,
+            },
+        )
+        if r.status_code == 200:
+            response = json.loads(r.content.decode('utf-8'))
+        else:
+            raise requests.HTTPError('HTTP Status: {}'.format(r.status_code))
+    except requests.RequestException as e:
+        response = None
+
+    if response is None:
+        return None
+    return [
+        {
+            'line': line,
+            'direction': direction,
+            'arrival': 0 if arrival == '' else int(arrival)
+        } for line, direction, arrival in response
+    ]
